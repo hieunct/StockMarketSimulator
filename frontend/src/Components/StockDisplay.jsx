@@ -34,7 +34,7 @@ const StyledTableRow = withStyles((theme) => ({
 
 
 
-function createData(shares, price, total, current) {
+function createTransaction(shares, price, total, current) {
     return { shares, price, total, current };
 }
 
@@ -58,30 +58,36 @@ const StockDisplay = (props) => {
     const [currentPrice, setCurrentPrice] = useState({});
 
     useEffect(() => {
-        console.log("re-render")
         axios.get('http://localhost:8080/allStockPrice')
             .then((res) => {
-                setCurrentPrice(res.data)
+                console.log(res.data)
+                let stockMap = {}
+                for (var i = 0; i < res.data.length; i++) {
+                    const stock = res.data;
+                    const names = stock[i]["stock"]
+                    stockMap = { ...stockMap, [names]: stock[i]["fields"]["price"] }
+                }
+                setCurrentPrice(stockMap);
+                // setCurrentPrice((currentPrice) => {
+                //     return {...currentPrice, res.data}
+                // })
             })
     }, [])
 
     useEffect(() => {
         axios.get('http://localhost:8080/allTransactions')
             .then((res) => {
-                // console.log(stockMap)
+                console.log(res.data)
                 const stockList = res.data.map(row => row["Stock Name"]);
-                console.log(stockList)
                 let stockMap = {}
                 for (var i = 0; i < res.data.length; i++) {
                     const stock = res.data;
                     const names = stock[i]["Stock Name"]
-                    stockMap = { ...stockMap, [names]: createData(stock[i]["Shares"], stock[i]["Price"], stock[i]["Total"], 0) }
+                    stockMap = { ...stockMap, [names]: createTransaction(stock[i]["Shares"], stock[i]["Price"], stock[i]["Total"], 0) }
                 }
                 setStockDict(stockMap);
                 setRows(stockList);
-
             })
-        // addData(props.newStock)
     }, [props.newStock])
 
     useEffect(() => {
@@ -102,20 +108,6 @@ const StockDisplay = (props) => {
         })
     }, [])
 
-    // const addData = (data) => {
-    //     if (stockDict[data["Stock Name"]] === undefined) {
-    //         setStockDict((stockDict) => {
-    //             return { ...stockDict, [data["Stock Name"]]: createData(data["Shares"], data["Price"], data["Total"]) }
-    //         });
-    //     }
-    //     else if (data["Stock Name"] !== undefined) {
-    //         console.log(data)
-    //         const stockList = stockDict;
-    //         stockList[data["Stock Name"]] = createData(data["Shares"], data["Price"], data["Total"]);
-    //         setStockDict(stockList);
-    //     }
-    // }
-
     return (
         <TableContainer border={1} component={Paper}>
             <Table aria-label="customized table">
@@ -131,23 +123,28 @@ const StockDisplay = (props) => {
                 <TableBody>
                     {rows.reduce((result, row) => {
                         let currentRowPrice = (currentPrice[row])
-                        let shares = 0;
-                        let equity = 0;
-                        let totalReturn = 0 
+                        let shares = '0';
+                        let equity = '0';
+                        let totalReturn = '0'
+                        if (stockDict !== undefined) {
                             shares = (parseFloat(stockDict[row]["shares"]).toLocaleString('en-US', { maximumFractionDigits: 7 }));
-                            equity = `$ ${(parseFloat(shares.replace(',', '')).toFixed(6) * parseFloat(currentRowPrice.replace(',', ''))).toLocaleString()}`;
+                            // shares = stockDict[row]["shares"].toString()
+                            if(shares !== undefined && currentRowPrice !== undefined) {
+                                console.log(currentRowPrice)
+                                equity = `$ ${(parseFloat(shares.replace(',', '')).toFixed(6) * parseFloat(currentRowPrice.replace(',', ''))).toLocaleString()}`;
+                            }
                             totalReturn = parseFloat(parseFloat(equity.replace('$', '').replace(',', '')) - parseFloat(stockDict[row]["total"])).toFixed(3)
-                        if (stockDict[row]["shares"] !== 0) {
-                            result.push(<StyledTableRow>
-                                <StyledTableCell className={classes.tableRightBorder} component="th" scope="row" align="center">
-                                    {row}
-                                </StyledTableCell>
-                                <StyledTableCell className={classes.tableRightBorder} align="center">{shares}</StyledTableCell>
-                                <StyledTableCell className={classes.tableRightBorder} align="center">{equity}</StyledTableCell>
-                                <StyledTableCell className={classes.tableRightBorder} align="center">{totalReturn}</StyledTableCell>
-                                <StyledTableCell className={classes.tableRightBorder} align="center">{currentRowPrice}</StyledTableCell>
-                            </StyledTableRow>)
                         }
+
+                        result.push(<StyledTableRow>
+                            <StyledTableCell className={classes.tableRightBorder} component="th" scope="row" align="center">
+                                {row}
+                            </StyledTableCell>
+                            <StyledTableCell className={classes.tableRightBorder} align="center">{shares}</StyledTableCell>
+                            <StyledTableCell className={classes.tableRightBorder} align="center">{equity}</StyledTableCell>
+                            <StyledTableCell className={classes.tableRightBorder} align="center">{totalReturn}</StyledTableCell>
+                            <StyledTableCell className={classes.tableRightBorder} align="center">{currentRowPrice}</StyledTableCell>
+                        </StyledTableRow>)
                         return result
                     }, [])}
                 </TableBody>

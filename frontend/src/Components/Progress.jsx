@@ -1,10 +1,17 @@
 import { Chart } from 'chart.js';
 import React, { useState, useEffect } from 'react';
+import Investing from './Investing';
+import { withStyles, makeStyles } from '@material-ui/core/styles';
 
+const useStyles = makeStyles(theme => ({
+    investing: {
+        marginLeft: theme.spacing(10)
+    }
+}));
 const Progress = () => {
     const [stockPrice, setStockPrice] = useState([]);
     const [stockInterval, setStockInterval] = useState([]);
-
+    const classes = useStyles()
     useEffect(() => {
         fetchStock()
     }, []);
@@ -13,7 +20,6 @@ const Progress = () => {
     const fetchStock = () => {
         const API_KEY = 'DG4BRBSVFRTU4V67';
         let StockSymbol = 'BTC';
-        // let API_Call = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&symbol=${StockSymbol}&outputsize=compact&apikey=${API_KEY}`;
         let API_Call = `https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=BTC&market=USD&apikey=${API_KEY}`
         let stockPricee = [];
         let stockIntervall = [];
@@ -75,7 +81,12 @@ const Progress = () => {
     return (
         <React.Fragment>
             <div>
-                <h1>Stock Market</h1>
+                <h1 align="center">Stock Market</h1>
+                <div className={classes.investing}>
+                    <Investing>
+                    </Investing>
+                </div>
+
                 <div className="Progress">
                     <canvas id="stockChart" width={document.body.clientWidth} height="450" />
                 </div>

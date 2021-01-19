@@ -6,6 +6,7 @@ import { withStyles, makeStyles } from '@material-ui/core/styles';
 import Progress from './Progress';
 import BuyInputForm from './BuyInputForm';
 import SellInputForm from './SellInputForm';
+
 import { Typography } from '@material-ui/core';
 const useStyles = makeStyles({
     table: {
@@ -53,7 +54,6 @@ const Layout = () => {
                     <Grid className={classes.stockDisplay} >
                         <StockDisplay newStock={newStock} deleteStock={deleteStock}>
                         </StockDisplay>
-
                     </Grid>
                     <Grid>
                         <Typography variant="h4" align="left" color="primary">
