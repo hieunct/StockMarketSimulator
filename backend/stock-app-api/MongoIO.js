@@ -2,6 +2,7 @@ const e = require("express");
 
 const insertTransaction = (db, callback, data) => {
     db.collection('Transactions').insertOne(data, (err, result) => {
+        // console.log(result)
         callback()
     })
 }
@@ -38,10 +39,11 @@ const updateExistedStock = (db, callback, existedStock, data) => {
 }
 
 const insertStockPrice = (db, data) => {
-    db.collection("StockPrice").insertOne(data, (err, result) => {
+    db.collection("StockPrice").insertOne(data, (err, res) => {
         if (err) {
             throw err;
         }
+        console.log(res);
     })
 }
 
@@ -52,9 +54,14 @@ const sellTransaction = (db, callback, existedStock, data) => {
     if (data["Shares"] == 0) {
         db.collection("Transactions").deleteOne(filter, (err, res) => {
             if (err) {
-                throw(err);
+                throw (err);
             }
             callback();
+        })
+        db.collection("StockPrice").deleteOne({"stock": data["Stock Name"]}, (err, res) => {
+            if (err) {
+                throw (err);
+            }
         })
     }
     else {
@@ -72,8 +79,19 @@ const sellTransaction = (db, callback, existedStock, data) => {
         })
     }
 }
+
+const depositMoney = (db, callback, data) => {
+    db.collection("Deposit").insertOne(data, (err, res) => {
+        if (err) {
+            console.log(err);
+        }
+        callback();
+    })
+}
+
 exports.insertTransaction = insertTransaction;
 exports.getAllTransactions = getAllTransactions;
 exports.updateExistedStock = updateExistedStock;
 exports.insertStockPrice = insertStockPrice;
 exports.sellTransaction = sellTransaction;
+exports.depositMoney = depositMoney;

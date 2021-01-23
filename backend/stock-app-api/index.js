@@ -64,11 +64,18 @@ app.get('/allStockPrice', (req, res) => {
         }
         const data = {};
         const db = client.db("StockApp");
-        const cursor = db.collection("StockPrice").find();
-        await cursor.forEach((doc) => {
-            data[doc['stock']] = doc['fields']['price']
+        // const cursor = db.collection("StockPrice").find();
+        // await cursor.forEach((doc) => {
+        //     data[doc['stock']] = doc['fields']['price']
+        // })
+        // res.send(data)
+        db.collection("StockPrice").find().toArray((err, results) => {
+            let stockMap = {}
+            results.forEach((stock, i) => {
+                stockMap = { ...stockMap, [stock["stock"]]: stock["fields"]["price"] }
+            })
+            res.send(stockMap)
         })
-        res.send(data)
     })
 })
 
@@ -102,7 +109,7 @@ app.post('/addTransaction', (req, res) => {
                     mongoIO.insertTransaction(db, () => {
                         res.status(200)
                             .json({
-                                status: 'OK',
+                                data,
                             });
                     }, data);
                 }
@@ -110,7 +117,6 @@ app.post('/addTransaction', (req, res) => {
         db.collection("StockPrice").findOne({ "stock": data["Stock Name"] })
             .then((res) => {
                 if (!res) {
-                    console.log(res);
                     const newStock = {
                         "stock": data["Stock Name"],
                         "time": '',
@@ -156,5 +162,49 @@ app.post("/sellTransaction", (req, res) => {
                         })
                 }, output, data)
             })
+    })
+})
+
+app.get("/allDeposit", (req, res) => {
+    MongoClient.connect(url, (err, client) => {
+        if (err) {
+            throw err;
+        }
+        const db = client.db("StockApp");
+        db.collection("Deposit").find().toArray((err, result) => {
+            if (err) {
+                throw err;
+            }
+            res.send(result);
+        })
+    })
+})
+
+app.post("/deposit", (req, res) => {
+    const data = req.body;
+    MongoClient.connect(url, (err, client) => {
+        if (err) {
+            console.log(err);
+        }
+        const db = client.db("StockApp");
+        mongoIO.depositMoney(db, () => {
+            res.status(200)
+            .json({
+                data
+            })
+        }, data)
+    })
+})
+
+app.get('/mostRecentDeposit', (req, res) => {
+    MongoClient.connect(url, (err, client) => {
+        if (err) {
+            res.send(err);
+        }
+        const db = client.db("StockApp")
+        db.collection("Deposit").find().sort({date:-1}).limit(1).toArray((err, result) => {
+            res.send(result)
+        })
+        
     })
 })
