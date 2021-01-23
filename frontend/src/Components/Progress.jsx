@@ -81,11 +81,7 @@ const Progress = () => {
     return (
         <React.Fragment>
             <div>
-                <h1 align="center">Stock Market</h1>
-                <div className={classes.investing}>
-                    <Investing>
-                    </Investing>
-                </div>
+                
 
                 <div className="Progress">
                     <canvas id="stockChart" width={document.body.clientWidth} height="450" />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { withStyles, makeStyles } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -9,7 +9,7 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import axios from 'axios';
 import io from 'socket.io-client';
-
+import { TransactionContext, StockPriceContext } from './Layout'
 // const _ = require('lodash')
 const StyledTableCell = withStyles((theme) => ({
     head: {
@@ -56,58 +56,9 @@ const StockDisplay = (props) => {
     const [rows, setRows] = useState([]);
     const [stockDict, setStockDict] = useState({});
     const [currentPrice, setCurrentPrice] = useState({});
-
-    useEffect(() => {
-        axios.get('http://localhost:8080/allStockPrice')
-            .then((res) => {
-                console.log(res.data)
-                let stockMap = {}
-                for (var i = 0; i < res.data.length; i++) {
-                    const stock = res.data;
-                    const names = stock[i]["stock"]
-                    stockMap = { ...stockMap, [names]: stock[i]["fields"]["price"] }
-                }
-                setCurrentPrice(stockMap);
-                // setCurrentPrice((currentPrice) => {
-                //     return {...currentPrice, res.data}
-                // })
-            })
-    }, [])
-
-    useEffect(() => {
-        axios.get('http://localhost:8080/allTransactions')
-            .then((res) => {
-                console.log(res.data)
-                const stockList = res.data.map(row => row["Stock Name"]);
-                let stockMap = {}
-                for (var i = 0; i < res.data.length; i++) {
-                    const stock = res.data;
-                    const names = stock[i]["Stock Name"]
-                    stockMap = { ...stockMap, [names]: createTransaction(stock[i]["Shares"], stock[i]["Price"], stock[i]["Total"], 0) }
-                }
-                setStockDict(stockMap);
-                setRows(stockList);
-            })
-    }, [props.newStock])
-
-    useEffect(() => {
-        let stockList = rows;
-        stockList = rows.filter((item) => {
-            return item !== props.deleteStock["Stock Name"]
-        })
-        setRows(stockList)
-    }, [props.deleteStock])
-
-    useEffect(() => {
-        const socket = io.connect("http://localhost:8080");
-        socket.on("change-type", async (data) => {
-            const [key, value] = Object.entries(data)[0]
-            setCurrentPrice((currentPrice) => {
-                return { ...currentPrice, [key]: value }
-            })
-        })
-    }, [])
-
+    const transactions = useContext(TransactionContext).transaction;
+    const updatedPrice = useContext(StockPriceContext).currentPrice;
+    
     return (
         <TableContainer border={1} component={Paper}>
             <Table aria-label="customized table">
@@ -121,19 +72,17 @@ const StockDisplay = (props) => {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {rows.reduce((result, row) => {
-                        let currentRowPrice = (currentPrice[row])
+                    {Object.keys(transactions).reduce((result, row) => {
+                        let currentRowPrice = (updatedPrice[row])
                         let shares = '0';
                         let equity = '0';
                         let totalReturn = '0'
                         if (stockDict !== undefined) {
-                            shares = (parseFloat(stockDict[row]["shares"]).toLocaleString('en-US', { maximumFractionDigits: 7 }));
-                            // shares = stockDict[row]["shares"].toString()
-                            if(shares !== undefined && currentRowPrice !== undefined) {
-                                console.log(currentRowPrice)
+                            shares = (parseFloat(transactions[row]["shares"]).toLocaleString('en-US', { maximumFractionDigits: 7 }));
+                            if (shares !== undefined && currentRowPrice !== undefined) {
                                 equity = `$ ${(parseFloat(shares.replace(',', '')).toFixed(6) * parseFloat(currentRowPrice.replace(',', ''))).toLocaleString()}`;
                             }
-                            totalReturn = parseFloat(parseFloat(equity.replace('$', '').replace(',', '')) - parseFloat(stockDict[row]["total"])).toFixed(3)
+                            totalReturn = parseFloat(parseFloat(equity.replace('$', '').replace(',', '')) - parseFloat(transactions[row]["total"])).toFixed(3)
                         }
 
                         result.push(<StyledTableRow>
@@ -153,3 +102,54 @@ const StockDisplay = (props) => {
     );
 }
 export default StockDisplay;
+// useEffect(() => {
+    //     // if (Object.keys(transactions).length !== 0) {
+    //     //     const stockList = transactions.map(row => row["Stock Name"]);
+    //     //     let stockMap = {}
+    //     //     transactions.forEach((stock, i) => {
+    //     //         const names = stock["Stock Name"]
+    //     //         stockMap = { ...stockMap, [names]: createTransaction(stock["Shares"], stock["Price"], stock["Total"], 0) }
+    //     //     })
+    //     //     setStockDict(stockMap);
+    //     //     setRows(stockList);
+    //     // }
+    //     setStockDict(transactions)
+    //     setCurrentPrice(updatedPrice)
+    // }, [transactions, updatedPrice])
+
+    // setStockDict(transactions)
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         const stockPrice = await axios.get('http://localhost:8080/allStockPrice');
+    //         setCurrentPrice(stockPrice.data);
+    //         const transactions = await axios.get('http://localhost:8080/allTransactions');
+    //         const stockList = transactions.data.map(row => row["Stock Name"]);
+    //             let stockMap = {}
+    //             for (var i = 0; i < transactions.data.length; i++) {
+    //                 const stock = transactions.data;
+    //                 const names = stock[i]["Stock Name"]
+    //                 stockMap = { ...stockMap, [names]: createTransaction(stock[i]["Shares"], stock[i]["Price"], stock[i]["Total"], 0) }
+    //             }
+    //             setStockDict(stockMap);
+    //             setRows(stockList);
+    //     }
+    //     fetchData();
+    // }, [props.newStock])
+
+    // useEffect(() => {
+    //     let stockList = rows;
+    //     stockList = rows.filter((item) => {
+    //         return item !== props.deleteStock["Stock Name"]
+    //     })
+    //     setRows(stockList)
+    // }, [props.deleteStock])
+
+    // useEffect(() => {
+    //     const socket = io.connect("http://localhost:8080");
+    //     socket.on("change-type", async (data) => {
+    //         const [key, value] = Object.entries(data)[0]
+    //         setCurrentPrice((currentPrice) => {
+    //             return { ...currentPrice, [key]: value }
+    //         })
+    //     })
+    // }, [])
