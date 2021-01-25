@@ -16,14 +16,13 @@ const getAllTransactions = async (db, callback, data) => {
         // console.log(result)
     })
     await dataList;
-    console.log(data)
     callback()
 };
 
 const updateExistedStock = (db, callback, existedStock, data) => {
-    data["Shares"] = parseInt(existedStock["Shares"]) + parseInt(data["Shares"]);
-    data["Total"] = parseInt(existedStock["Total"]) + parseInt(data["Total"]);
-    data["Price"] = parseInt(data["Total"]) / parseInt(data["Shares"]);
+    data["Shares"] = parseFloat(existedStock["Shares"]) + parseFloat(data["Shares"]);
+    data["Total"] = parseFloat(existedStock["Total"]) + parseFloat(data["Total"]);
+    data["Price"] = parseFloat(data["Total"]) / parseFloat(data["Shares"]);
     const filter = { "Stock Name": data["Stock Name"] }
     const updateDoc = {
         $set: {
@@ -43,7 +42,6 @@ const insertStockPrice = (db, data) => {
         if (err) {
             throw err;
         }
-        console.log(res);
     })
 }
 
