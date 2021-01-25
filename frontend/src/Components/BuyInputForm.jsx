@@ -6,8 +6,9 @@ import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
+import Alert from '@material-ui/lab/Alert';
 import axios from 'axios';
-import { TransactionContext, StockPriceContext } from './Layout'
+import { TransactionContext, StockPriceContext, DepositContext } from './Layout'
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -24,50 +25,74 @@ const BuyInputForm = (props) => {
     const [stockName, setStockName] = useState('');
     const [shares, setShares] = useState('');
     const [price, setPrice] = useState('');
+    const [enoughMoney, setEnoughMoney] = useState(true)
     const modify = useContext(TransactionContext).handleModifyingStock;
     const handleStockNameChange = e => setStockName(e.target.value);
     const handleSharesChange = e => setShares(e.target.value);
     const handlePriceChange = e => setPrice(e.target.value);
-
+    const deposit = useContext(DepositContext).deposit;
+    const newDeposit = useContext(DepositContext).handleBuyAndSell;
     const handleSubmit = async e => {
         e.preventDefault()
-        const data = {
-            "Stock Name": stockName,
-            "Shares": shares,
-            "Price": price,
-            "Total": shares * price
-        };
-        
-        axios.post('http://localhost:8080/addTransaction', data)
-            .then((res) => {
-                setStockName('');
-                setPrice('');
-                setShares('');
-                modify(res.data.data, true)
-                console.log(res.data.data)
-            });
+        e.stopPropagation()
+        console.log(shares * price)
+        if (shares * price > deposit) {
+            setEnoughMoney(false);
+        }
+        else {
+            const data = {
+                "Stock Name": stockName,
+                "Shares": shares,
+                "Price": price,
+                "Total": shares * price
+            };
+
+            axios.post('http://localhost:8080/addTransaction', data)
+                .then((res) => {
+                    setStockName('');
+                    setPrice('');
+                    setShares('');
+                    modify(res.data.data, true)
+                });
+        }
+        newDeposit({
+            "amount": parseFloat(deposit) - (parseFloat(shares) * parseFloat(price)),
+            "date": Date.now()
+        })
     }
+    useEffect(() => {
+        if (shares * price > deposit) {
+            setEnoughMoney(false);
+        }
+        else {
+            setEnoughMoney(true);
+        }
+    }, [shares, price])
     return (
-        <form className={classes.root} noValidate autoComplete="off" onSubmit={handleSubmit}>
-            <FormControl>
-                <InputLabel> Stock Name</InputLabel>
-                <Input id="outlined-basic" onChange={handleStockNameChange} value={stockName} />
-            </FormControl>
-            <FormControl>
-                <InputLabel> Shares</InputLabel>
-                <Input id="outlined-basic" onChange={handleSharesChange} value={shares} />
-            </FormControl>
-            <FormControl>
-                <InputLabel> Price purchased</InputLabel>
-                <Input id="outlined-basic"
-                    onChange={handlePriceChange}
-                    value={price}
-                    startAdornment={<InputAdornment position="start">$</InputAdornment>} />
-            </FormControl>
-            <Button type='submit' variant="contained" color="primary" onSubmit={handleSubmit}>
-                Submit
-            </Button>
-        </form>
+        <React.Fragment>
+            <form className={classes.root} noValidate autoComplete="off" onSubmit={handleSubmit}>
+                <FormControl>
+                    <InputLabel> Stock Name</InputLabel>
+                    <Input id="outlined-basic" onChange={handleStockNameChange} value={stockName} />
+                </FormControl>
+                <FormControl>
+                    <InputLabel> Shares</InputLabel>
+                    <Input id="outlined-basic" onChange={handleSharesChange} value={shares} />
+                </FormControl>
+                <FormControl>
+                    <InputLabel> Price purchased</InputLabel>
+                    <Input id="outlined-basic"
+                        onChange={handlePriceChange}
+                        value={price}
+                        startAdornment={<InputAdornment position="start">$</InputAdornment>} />
+                </FormControl>
+                <Button type='submit' variant="contained" color="primary" error={!enoughMoney}>
+                    Submit
+                </Button>
+            </form>
+            {!enoughMoney && <Alert severity="error">Buying Power is not enough</Alert>}
+        </React.Fragment>
+
     );
 }
 export default BuyInputForm

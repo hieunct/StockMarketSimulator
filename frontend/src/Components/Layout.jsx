@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import React from 'react';
 import Grid from '@material-ui/core/Grid';
 import StockDisplay from './StockDisplay';
@@ -51,6 +51,14 @@ const useStyles = makeStyles(theme => ({
 export const TransactionContext = React.createContext();
 export const StockPriceContext = React.createContext();
 export const DepositContext = React.createContext();
+
+const useIsMount = () => {
+    const isMountRef = useRef(true);
+    useEffect(() => {
+      isMountRef.current = false;
+    }, []);
+    return isMountRef.current;
+  };
 const Layout = () => {
     const classes = useStyles();
     const [newStock, setNewStock] = useState({});
@@ -58,7 +66,8 @@ const Layout = () => {
     const [transaction, setTransaction] = useState({});
     const [currentPrice, setCurrentPrice] = useState({});
     const [deposit, setDeposit] = useState(0);
-    
+    const prevDeposit = useRef();
+    const isMount = useIsMount();
     const addData = (data) => {
         setNewStock(data);
     }
@@ -80,12 +89,17 @@ const Layout = () => {
     }
 
     async function handleDepositChange (data) {
-        console.log("I ran")
         setDeposit(deposit => {
             return parseFloat(deposit) + parseFloat(data["amount"])
         })
-        
     }
+
+    async function handleBuyAndSell (data) {
+        setDeposit(data["amount"])
+    }
+    useEffect(() => {
+        prevDeposit.current = deposit;
+    })
 
     useEffect(() => {
         const fetchData = async () => {
@@ -114,7 +128,6 @@ const Layout = () => {
     useEffect(() => {
         const fetchData = async () => {
             const response = await axios.get("http://localhost:8080/mostRecentDeposit")
-            console.log(response.data.amount)
             if (response.data.length !== 0) {
                 setDeposit(response.data[0].amount);
             }
@@ -140,18 +153,16 @@ const Layout = () => {
             }
             await axios.post("http://localhost:8080/deposit", data)
         }
-        if(deposit !== 0) {
+        console.log(prevDeposit.current)
+        console.log(deposit)
+        if(deposit !== 0 && deposit !== localStorage.getItem("deposit")) {
             sendDeposit();
         }
     }, [deposit])
-    // if (Object.keys(currentPrice).length === 0 && Object.keys(transaction).length === 0) {
-    //     return (
-    //         <div>
-    //             Loading
-    //         </div>
-    //     )
-    // }
 
+    useEffect(() => {
+        localStorage.setItem("deposit", deposit);
+    }, [prevDeposit.current])
     return (
         <React.Fragment>
             <Grid container>
@@ -162,7 +173,7 @@ const Layout = () => {
                                 <StockDisplay newStock={newStock} deleteStock={deleteStock}>
                                 </StockDisplay>
                             </Grid>
-                            <DepositContext.Provider value={{ deposit, handleDepositChange }}>
+                            <DepositContext.Provider value={{ deposit, handleDepositChange, handleBuyAndSell }}>
                                 <Grid>
                                     <Investing >
                                     </Investing>

@@ -7,7 +7,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
 import axios from 'axios';
-import { TransactionContext, StockPriceContext } from './Layout'
+import { TransactionContext, StockPriceContext, DepositContext } from './Layout'
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -28,6 +28,8 @@ const SellInputForm = (props) => {
     const handleSharesChange = e => setShares(e.target.value);
     const handlePriceChange = e => setPrice(e.target.value);
     const modify = useContext(TransactionContext).handleModifyingStock;
+    const deposit = useContext(DepositContext).deposit;
+    const newDeposit = useContext(DepositContext).handleBuyAndSell; 
     const handleSubmit = async e => {
         e.preventDefault()
         const data = {
@@ -43,6 +45,10 @@ const SellInputForm = (props) => {
                 setShares('');
                 modify(res.data.data)
             });
+        newDeposit({
+            "amount": parseFloat(deposit) + (parseFloat(shares) * parseFloat(price)),
+            "date": Date.now()
+        })
     }
     return (
         <form className={classes.root} noValidate autoComplete="off" onSubmit={handleSubmit}>

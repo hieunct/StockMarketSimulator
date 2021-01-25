@@ -7,7 +7,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
 import axios from 'axios';
-import { TransactionContext, StockPriceContext } from './Layout'
+import { TransactionContext, StockPriceContext, DepositContext } from './Layout'
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -22,19 +22,17 @@ const useStyles = makeStyles((theme) => ({
 const WithdrawalForm = (props) => {
     const classes = useStyles();
     const [deposit, setDeposit] = useState('');
-    
+    const newDeposit = useContext(DepositContext).handleDepositChange
     const handleDepositChange = e => setDeposit(e.target.value);
 
     const handleSubmit = async e => {
         e.preventDefault()
         const data = {
-            "amount": deposit,
-            "date": Date().toLocaleString()
+            "amount": -deposit,
+            "date": Date.now()
         }
-        axios.post('http://localhost:8080/deposit', data)
-            .then((res) => {
-                setDeposit('')
-            });
+        setDeposit('')
+        newDeposit(data)     
     }
     return (
         <form className={classes.root} noValidate autoComplete="off" onSubmit={handleSubmit}>
