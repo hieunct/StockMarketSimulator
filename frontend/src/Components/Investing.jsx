@@ -15,13 +15,58 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 const Investing = (props) => {
-    const [totalDeposit, setTotalDeposit] = useState(0);
-    const [investing, setInvesting] = useState(0);
     const transactions = useContext(TransactionContext).transaction;
     const updatedPrice = useContext(StockPriceContext).currentPrice;
+    const buyPower = useContext(DepositContext).buyPower
     const deposit = useContext(DepositContext).deposit
+    const totalReturn = () => {
+        return Object.keys(transactions).reduce((result, row) => {
+            let currentRowPrice = (updatedPrice[row])
+            let shares = '0';
+            let equity = '0';
+            let totalReturn = '0';
+            shares = (parseFloat(transactions[row]["shares"]).toLocaleString('en-US', { maximumFractionDigits: 7 }));
+            if (shares !== undefined && currentRowPrice !== undefined) {
+                equity = `$ ${(parseFloat(shares.replace(',', '')).toFixed(6) * parseFloat(currentRowPrice.replace(',', ''))).toLocaleString()}`;
+            }
+            totalReturn = parseFloat(parseFloat(equity.replace('$', '').replace(',', '')) - parseFloat(transactions[row]["total"])).toFixed(3)
+            result += parseFloat(totalReturn);
+            return result;
+        }, 0)
+    }
+    const totalStockInitial = () => {
+        return Object.keys(transactions).reduce((result, row) => {
+            result += parseFloat(transactions[row]["total"])
+            return result;
+        }, 0)
+    }
     const classes = useStyles();
-    // useEffect(() => {
+    
+    return (
+        <React.Fragment>
+            <div className={classes.direction}>
+                <div className={classes.numberDisplay}>
+                    <Typography align="left" variant="h2" gutterBottom>
+                        Investing
+                    </Typography>
+                    <Typography align="left" variant="h2" gutterBottom>
+                        {buyPower + totalStockInitial() + totalReturn()}
+                    </Typography>
+                </div>
+                <div>
+                    <Typography align="left" variant="h2" gutterBottom>
+                        Buying Power
+                    </Typography>
+                    <Typography align="left" variant="h2" gutterBottom>
+                        {buyPower}
+                    </Typography>
+                </div>
+            </div>
+        </React.Fragment>
+    )
+}
+export default Investing;
+// useEffect(() => {
     //     const total = () => {
     //         let sum = 0;
     //         if (Object.keys(transactions).length !== 0 && Object.keys(updatedPrice).length !== 0) {
@@ -50,7 +95,7 @@ const Investing = (props) => {
     //     }
     // }
 
-    
+
     // useEffect(() => {
     //     setTotalDeposit(totalDeposit => {
     //         const data = props.newDeposit;
@@ -65,27 +110,3 @@ const Investing = (props) => {
     //     }
     //     sendData()
     // }, [props.newDeposit])
-    return (
-        <React.Fragment>
-            <div className={classes.direction}>
-                <div className={classes.numberDisplay}>
-                    <Typography align="left" variant="h2" gutterBottom>
-                        Investing
-                    </Typography>
-                    <Typography align="left" variant="h2" gutterBottom>
-                        {deposit}
-                    </Typography>
-                </div>
-                <div>
-                    <Typography align="left" variant="h2" gutterBottom>
-                        Buying Power
-                    </Typography>
-                    <Typography align="left" variant="h2" gutterBottom>
-                        {deposit}
-                    </Typography>
-                </div>
-            </div>
-        </React.Fragment>
-    )
-}
-export default Investing;

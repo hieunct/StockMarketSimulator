@@ -7,8 +7,6 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-import axios from 'axios';
-import io from 'socket.io-client';
 import { TransactionContext, StockPriceContext } from './Layout'
 // const _ = require('lodash')
 const StyledTableCell = withStyles((theme) => ({
@@ -53,12 +51,9 @@ const useStyles = makeStyles({
 
 const StockDisplay = (props) => {
     const classes = useStyles();
-    const [rows, setRows] = useState([]);
-    const [stockDict, setStockDict] = useState({});
-    const [currentPrice, setCurrentPrice] = useState({});
     const transactions = useContext(TransactionContext).transaction;
     const updatedPrice = useContext(StockPriceContext).currentPrice;
-    
+
     return (
         <TableContainer border={1} component={Paper}>
             <Table aria-label="customized table">
@@ -77,14 +72,11 @@ const StockDisplay = (props) => {
                         let shares = '0';
                         let equity = '0';
                         let totalReturn = '0'
-                        if (stockDict !== undefined) {
-                            shares = (parseFloat(transactions[row]["shares"]).toLocaleString('en-US', { maximumFractionDigits: 7 }));
-                            if (shares !== undefined && currentRowPrice !== undefined) {
-                                equity = `$ ${(parseFloat(shares.replace(',', '')).toFixed(6) * parseFloat(currentRowPrice.replace(',', ''))).toLocaleString()}`;
-                            }
-                            totalReturn = parseFloat(parseFloat(equity.replace('$', '').replace(',', '')) - parseFloat(transactions[row]["total"])).toFixed(3)
+                        shares = (parseFloat(transactions[row]["shares"]).toLocaleString('en-US', { maximumFractionDigits: 7 }));
+                        if (shares !== undefined && currentRowPrice !== undefined) {
+                            equity = `$ ${(parseFloat(shares.replace(',', '')).toFixed(6) * parseFloat(currentRowPrice.replace(',', ''))).toLocaleString()}`;
                         }
-
+                        totalReturn = parseFloat(parseFloat(equity.replace('$', '').replace(',', '')) - parseFloat(transactions[row]["total"])).toFixed(3)
                         result.push(<StyledTableRow>
                             <StyledTableCell className={classes.tableRightBorder} component="th" scope="row" align="center">
                                 {row}

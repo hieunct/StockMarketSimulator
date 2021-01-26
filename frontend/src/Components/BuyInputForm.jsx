@@ -30,13 +30,12 @@ const BuyInputForm = (props) => {
     const handleStockNameChange = e => setStockName(e.target.value);
     const handleSharesChange = e => setShares(e.target.value);
     const handlePriceChange = e => setPrice(e.target.value);
-    const deposit = useContext(DepositContext).deposit;
-    const newDeposit = useContext(DepositContext).handleBuyAndSell;
+    const buyPower = useContext(DepositContext).buyPower;
+    const newBuyPower = useContext(DepositContext).handleBuyAndSell;
     const handleSubmit = async e => {
         e.preventDefault()
         e.stopPropagation()
-        console.log(shares * price)
-        if (shares * price > deposit) {
+        if (shares * price > buyPower) {
             setEnoughMoney(false);
         }
         else {
@@ -55,13 +54,13 @@ const BuyInputForm = (props) => {
                     modify(res.data.data, true)
                 });
         }
-        newDeposit({
-            "amount": parseFloat(deposit) - (parseFloat(shares) * parseFloat(price)),
+        newBuyPower({
+            "amount": parseFloat(buyPower) - (parseFloat(shares) * parseFloat(price)),
             "date": Date.now()
         })
     }
     useEffect(() => {
-        if (shares * price > deposit) {
+        if (shares * price > buyPower) {
             setEnoughMoney(false);
         }
         else {

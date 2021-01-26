@@ -28,8 +28,8 @@ const SellInputForm = (props) => {
     const handleSharesChange = e => setShares(e.target.value);
     const handlePriceChange = e => setPrice(e.target.value);
     const modify = useContext(TransactionContext).handleModifyingStock;
-    const deposit = useContext(DepositContext).deposit;
-    const newDeposit = useContext(DepositContext).handleBuyAndSell; 
+    const buyPower = useContext(DepositContext).buyPower;
+    const newBuyPower = useContext(DepositContext).handleBuyAndSell; 
     const handleSubmit = async e => {
         e.preventDefault()
         const data = {
@@ -45,8 +45,8 @@ const SellInputForm = (props) => {
                 setShares('');
                 modify(res.data.data)
             });
-        newDeposit({
-            "amount": parseFloat(deposit) + (parseFloat(shares) * parseFloat(price)),
+        newBuyPower({
+            "amount": parseFloat(buyPower) + (parseFloat(shares) * parseFloat(price)),
             "date": Date.now()
         })
     }

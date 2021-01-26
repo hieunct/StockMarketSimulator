@@ -23,6 +23,7 @@ const WithdrawalForm = (props) => {
     const classes = useStyles();
     const [deposit, setDeposit] = useState('');
     const newDeposit = useContext(DepositContext).handleDepositChange
+    const newBuyPower = useContext(DepositContext).handleBuyPowerChange
     const handleDepositChange = e => setDeposit(e.target.value);
 
     const handleSubmit = async e => {
@@ -31,8 +32,9 @@ const WithdrawalForm = (props) => {
             "amount": -deposit,
             "date": Date.now()
         }
-        setDeposit('')
-        newDeposit(data)     
+        setDeposit('');
+        newDeposit(data);
+        newBuyPower(data);     
     }
     return (
         <form className={classes.root} noValidate autoComplete="off" onSubmit={handleSubmit}>

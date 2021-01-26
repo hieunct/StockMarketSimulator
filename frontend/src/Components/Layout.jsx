@@ -3,7 +3,6 @@ import React from 'react';
 import Grid from '@material-ui/core/Grid';
 import StockDisplay from './StockDisplay';
 import { withStyles, makeStyles } from '@material-ui/core/styles';
-import Progress from './Progress';
 import BuyInputForm from './BuyInputForm';
 import SellInputForm from './SellInputForm';
 import DepositForm from './DepositForm';
@@ -55,51 +54,68 @@ export const DepositContext = React.createContext();
 const useIsMount = () => {
     const isMountRef = useRef(true);
     useEffect(() => {
-      isMountRef.current = false;
+        isMountRef.current = false;
     }, []);
     return isMountRef.current;
-  };
+};
 const Layout = () => {
     const classes = useStyles();
-    const [newStock, setNewStock] = useState({});
-    const [deleteStock, setDeleteStock] = useState({});
     const [transaction, setTransaction] = useState({});
     const [currentPrice, setCurrentPrice] = useState({});
     const [deposit, setDeposit] = useState(0);
+    const [buyPower, setBuyPower] = useState(0);
     const prevDeposit = useRef();
-    const isMount = useIsMount();
-    const addData = (data) => {
-        setNewStock(data);
-    }
-    const sellStock = (data) => {
-        setDeleteStock(data);
-    }
+    const [test, setTest] = useState({ "AAPL": 0, "NIO": 0 });
     function createTransaction(shares, price, total, current) {
         return { shares, price, total, current };
     }
-    const handleModifyingStock = (data, boolean) => {
+    const handleModifyingStock = (data) => {
         setTransaction(transaction => {
             if (data["Shares"] === 0) {
                 delete transaction[data["Stock Name"]];
-                console.log(transaction)
                 return { ...transaction }
             }
             return { ...transaction, [data["Stock Name"]]: createTransaction(data["Shares"], data["Price"], data["Total"], 0) }
         })
     }
 
-    async function handleDepositChange (data) {
+    async function handleDepositChange(data) {
+        const sendDeposit = async () => {
+            const sendData = {
+                "amount": parseFloat(deposit) + parseFloat(data["amount"]),
+                "date": Date.now(),
+            }
+            await axios.post("http://localhost:8080/addDeposit", sendData)
+        }
+        await sendDeposit();
         setDeposit(deposit => {
             return parseFloat(deposit) + parseFloat(data["amount"])
         })
     }
 
-    async function handleBuyAndSell (data) {
-        setDeposit(data["amount"])
+    async function handleBuyPowerChange(data) {
+        const sendBuyPower = async () => {
+            const sendData = {
+                "amount": parseFloat(buyPower) + parseFloat(data["amount"]),
+                "date": Date.now(),
+            }
+            await axios.post("http://localhost:8080/buyPower", sendData);
+        }
+        await sendBuyPower();
+        setBuyPower(parseFloat(buyPower) + parseFloat(data["amount"]));
     }
-    useEffect(() => {
-        prevDeposit.current = deposit;
-    })
+
+    async function handleBuyAndSell(data) {
+        const sendBuyPower = async () => {
+            const sendData = {
+                "amount": parseFloat(data["amount"]),
+                "date": Date.now(),
+            }
+            await axios.post("http://localhost:8080/buyPower", sendData)
+        }
+        await sendBuyPower();
+        setBuyPower(data["amount"])
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -136,6 +152,16 @@ const Layout = () => {
     }, [])
 
     useEffect(() => {
+        const fetchData = async () => {
+            const response = await axios.get("http://localhost:8080/mostRecentBuyPower")
+            if (response.data.length !== 0) {
+                setBuyPower(response.data[0].amount);
+            }
+        }
+        fetchData()
+    }, [])
+
+    useEffect(() => {
         const socket = io.connect("http://localhost:8080");
         socket.on("change-type", async (data) => {
             const [key, value] = Object.entries(data)[0]
@@ -143,6 +169,25 @@ const Layout = () => {
                 return { ...currentPrice, [key]: value }
             })
         })
+        const socket2 = new WebSocket('wss://ws.finnhub.io?token=c084c2748v6tohecnqi0');
+
+        // Connection opened -> Subscribe
+        socket2.addEventListener('open', function (event) {
+            const list = ["AAPL", "NIO"]
+            for(var i = 0; i < list.length; i++) {
+                socket2.send(JSON.stringify({ 'type': 'subscribe', 'symbol': list[i] }))
+            }
+        });
+
+        // Listen for messages
+        socket2.addEventListener('message', function (event) {
+            setTest(test => {
+                const price = JSON.parse(event.data).data[0]["p"]
+                const name = JSON.parse(event.data).data[0]["s"]
+                // console.log(event.data)
+                return { ...test, [name]: price }
+            })
+        });
     }, [])
 
     useEffect(() => {
@@ -153,9 +198,7 @@ const Layout = () => {
             }
             await axios.post("http://localhost:8080/deposit", data)
         }
-        console.log(prevDeposit.current)
-        console.log(deposit)
-        if(deposit !== 0 && deposit !== localStorage.getItem("deposit")) {
+        if (deposit === 0 && localStorage.getItem(deposit) === 0) {
             sendDeposit();
         }
     }, [deposit])
@@ -163,6 +206,7 @@ const Layout = () => {
     useEffect(() => {
         localStorage.setItem("deposit", deposit);
     }, [prevDeposit.current])
+
     return (
         <React.Fragment>
             <Grid container>
@@ -170,22 +214,29 @@ const Layout = () => {
                     <TransactionContext.Provider value={{ transaction, handleModifyingStock }}>
                         <Grid className={classes.inputAndTable}>
                             <Grid className={classes.stockDisplay} >
-                                <StockDisplay newStock={newStock} deleteStock={deleteStock}>
+                                <StockDisplay >
                                 </StockDisplay>
                             </Grid>
-                            <DepositContext.Provider value={{ deposit, handleDepositChange, handleBuyAndSell }}>
+                            <DepositContext.Provider value={{ deposit, buyPower, handleDepositChange, handleBuyAndSell, handleBuyPowerChange }}>
                                 <Grid>
+                                    <div>
+                                        {test["AAPL"]}
+
+                                    </div>
+                                    <div>
+                                        {test["NIO"]}
+                                    </div>
                                     <Investing >
                                     </Investing>
                                     <Typography variant="h4" align="left" color="primary">
                                         Buy Stock
                                     </Typography>
-                                    <BuyInputForm onSubmit={addData}>
+                                    <BuyInputForm >
                                     </BuyInputForm>
                                     <Typography variant="h4" align="left" color="primary">
                                         Sell Stock
                                     </Typography>
-                                    <SellInputForm onSubmit={sellStock}>
+                                    <SellInputForm >
                                     </SellInputForm>
                                     <div className={classes.deposit}>
                                         <div className={classes.depositMargin}>
