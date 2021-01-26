@@ -2,7 +2,6 @@ const e = require("express");
 
 const insertTransaction = (db, callback, data) => {
     db.collection('Transactions').insertOne(data, (err, result) => {
-        // console.log(result)
         callback()
     })
 }
@@ -13,7 +12,6 @@ const getAllTransactions = async (db, callback, data) => {
             throw err;
         }
         data = result
-        // console.log(result)
     })
     await dataList;
     callback()
@@ -46,8 +44,8 @@ const insertStockPrice = (db, data) => {
 }
 
 const sellTransaction = (db, callback, existedStock, data) => {
-    data["Shares"] = parseInt(existedStock["Shares"]) - parseInt(data["Shares"]);
-    data["Total"] = parseInt(existedStock["Total"]) - parseInt(data["Total"]);
+    data["Shares"] = parseFloat(existedStock["Shares"]) - parseFloat(data["Shares"]);
+    data["Total"] = parseFloat(existedStock["Total"]) - parseFloat(data["Total"]);
     const filter = { "Stock Name": data["Stock Name"] }
     if (data["Shares"] == 0) {
         db.collection("Transactions").deleteOne(filter, (err, res) => {
@@ -56,7 +54,7 @@ const sellTransaction = (db, callback, existedStock, data) => {
             }
             callback();
         })
-        db.collection("StockPrice").deleteOne({"stock": data["Stock Name"]}, (err, res) => {
+        db.collection("StockPrice").deleteOne({ "stock": data["Stock Name"] }, (err, res) => {
             if (err) {
                 throw (err);
             }
@@ -87,9 +85,18 @@ const depositMoney = (db, callback, data) => {
     })
 }
 
+const buyPower = (db, callback, data) => {
+    db.collection("BuyPower").insertOne(data, (err, res) => {
+        if (err) {
+            console.log(err);
+        }
+        callback();
+    })
+}
 exports.insertTransaction = insertTransaction;
 exports.getAllTransactions = getAllTransactions;
 exports.updateExistedStock = updateExistedStock;
 exports.insertStockPrice = insertStockPrice;
 exports.sellTransaction = sellTransaction;
 exports.depositMoney = depositMoney;
+exports.buyPower = buyPower;

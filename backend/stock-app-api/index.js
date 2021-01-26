@@ -20,7 +20,7 @@ const io = require('socket.io')(server, {
         methods: ["GET", "POST"]
     }
 });
-
+const client = require('socket.io-client')
 app.get('/', (req, res) => {
     res.send("Hello World!")
 })
@@ -180,7 +180,7 @@ app.get("/allDeposit", (req, res) => {
     })
 })
 
-app.post("/deposit", (req, res) => {
+app.post("/addDeposit", (req, res) => {
     const data = req.body;
     MongoClient.connect(url, (err, client) => {
         if (err) {
@@ -189,9 +189,9 @@ app.post("/deposit", (req, res) => {
         const db = client.db("StockApp");
         mongoIO.depositMoney(db, () => {
             res.status(200)
-            .json({
-                data
-            })
+                .json({
+                    data
+                })
         }, data)
     })
 })
@@ -202,9 +202,37 @@ app.get('/mostRecentDeposit', (req, res) => {
             res.send(err);
         }
         const db = client.db("StockApp")
-        db.collection("Deposit").find().sort({date:-1}).limit(1).toArray((err, result) => {
+        db.collection("Deposit").find().sort({ date: -1 }).limit(1).toArray((err, result) => {
             res.send(result)
         })
-        
     })
 })
+
+app.post('/buyPower', (req, res) => {
+    const data = req.body;
+    MongoClient.connect(url, (err, client) => {
+        if (err) {
+            console.log(err);
+        }
+        const db = client.db("StockApp");
+        mongoIO.buyPower(db, () => {
+            res.status(200)
+                .json({
+                    data
+                })
+        }, data)
+    })
+})
+
+app.get('/mostRecentBuyPower', (req, res) => {
+    MongoClient.connect(url, (err, client) => {
+        if (err) {
+            res.send(err);
+        }
+        const db = client.db("StockApp")
+        db.collection("BuyPower").find().sort({ date: -1 }).limit(1).toArray((err, result) => {
+            res.send(result)
+        })
+    })
+})
+
