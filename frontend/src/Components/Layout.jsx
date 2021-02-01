@@ -8,10 +8,14 @@ import SellInputForm from './SellInputForm';
 import DepositForm from './DepositForm';
 import WithdrawalForm from './WithdrawalForm';
 import axios from 'axios';
-import io from 'socket.io-client';
 import { Typography } from '@material-ui/core';
+import { Paper } from '@material-ui/core';
 import Investing from './Investing';
+import Chart from './Chart';
 const useStyles = makeStyles(theme => ({
+    container: {
+        display: "flex"
+    },
     table: {
         minWidth: 700,
     },
@@ -29,13 +33,16 @@ const useStyles = makeStyles(theme => ({
     },
     inputAndTable: {
         display: "flex",
-        alignItems: "center",
+        justifyContent: 'center',
         marginTop: 50,
-        justify: "flex-end",
         flexDirection: "row"
     },
     investing: {
-        marginLeft: theme.spacing(10)
+        display: 'flex',
+        justifyContent: 'center',
+    },
+    paperColor: {
+        backgroundColor: "#424242"
     },
     deposit: {
         display: "flex",
@@ -44,6 +51,10 @@ const useStyles = makeStyles(theme => ({
     },
     depositMargin: {
         marginRight: theme.spacing(2)
+    },
+    chartGrid: {
+        width: "100%",
+        height: "400px"
     }
 }));
 
@@ -64,8 +75,8 @@ const Layout = () => {
     const [currentPrice, setCurrentPrice] = useState({});
     const [deposit, setDeposit] = useState(0);
     const [buyPower, setBuyPower] = useState(0);
+    const [history, setHistory] = useState({});
     const prevDeposit = useRef();
-    const [test, setTest] = useState({ "AAPL": 0, "NIO": 0 });
     function createTransaction(shares, price, total, current) {
         return { shares, price, total, current };
     }
@@ -77,6 +88,10 @@ const Layout = () => {
             }
             return { ...transaction, [data["Stock Name"]]: createTransaction(data["Shares"], data["Price"], data["Total"], 0) }
         })
+
+        setCurrentPrice(currentPrice => {
+            return { ...currentPrice, [data["Stock Name"]]: data["Price"] }
+        })
     }
 
     async function handleDepositChange(data) {
@@ -85,7 +100,7 @@ const Layout = () => {
                 "amount": parseFloat(deposit) + parseFloat(data["amount"]),
                 "date": Date.now(),
             }
-            await axios.post("http://localhost:8080/addDeposit", sendData)
+            await axios.post(`${process.env.REACT_APP_BACKEND_URL}addDeposit`, sendData)
         }
         await sendDeposit();
         setDeposit(deposit => {
@@ -99,7 +114,7 @@ const Layout = () => {
                 "amount": parseFloat(buyPower) + parseFloat(data["amount"]),
                 "date": Date.now(),
             }
-            await axios.post("http://localhost:8080/buyPower", sendData);
+            await axios.post(`${process.env.REACT_APP_BACKEND_URL}buyPower`, sendData);
         }
         await sendBuyPower();
         setBuyPower(parseFloat(buyPower) + parseFloat(data["amount"]));
@@ -111,17 +126,30 @@ const Layout = () => {
                 "amount": parseFloat(data["amount"]),
                 "date": Date.now(),
             }
-            await axios.post("http://localhost:8080/buyPower", sendData)
+            await axios.post(`${process.env.REACT_APP_BACKEND_URL}buyPower`, sendData)
         }
         await sendBuyPower();
         setBuyPower(data["amount"])
     }
 
+    async function handleModifyingHistory(data) {
+        setHistory(history => {
+            const stock = data['stock'];
+            if (history[stock] !== undefined) {
+                history[stock].push(data);
+            }
+            else {
+                const hist = []
+                hist.push(data)
+                history = {...history, [stock]: hist}
+            }
+            return history;
+        })
+    }
     useEffect(() => {
         const fetchData = async () => {
-            const response = await axios.get('http://localhost:8080/allTransactions')
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}allTransactions`)
             if (Object.keys(response.data).length !== 0) {
-                const stockList = response.data.map(row => row["Stock Name"]);
                 let stockMap = {}
                 response.data.forEach((stock, i) => {
                     const names = stock["Stock Name"]
@@ -134,8 +162,25 @@ const Layout = () => {
             }
         }
         const fetchData2 = async () => {
-            const response = await axios.get('http://localhost:8080/allStockPrice')
-            setCurrentPrice(response.data);
+            let day = new Date();
+            const backend = await axios.get(`${process.env.REACT_APP_BACKEND_URL}allStockPrice`)
+            console.log(backend)
+            
+            if (day.getDay() !== 0 && day.getDay() !== 6 && !day.getHours() <= 3 && !day.getHours >= 21) {
+                console.log(new Date().getHours());
+                setCurrentPrice(backend.data);
+            }
+            else {
+                let stockName = Object.keys(backend.data);
+                const API_KEY = process.env.REACT_APP_API_KEY;
+                for (let i = 0; i < stockName.length; i++) {
+                    const response = await axios.get(`https://finnhub.io/api/v1/quote?symbol=${stockName[i].toUpperCase()}&token=${API_KEY}`);
+                    const price = response.data["c"].toString()
+                    setCurrentPrice(currentPrice => {
+                        return { ...currentPrice, [stockName[i]]: price }
+                    })
+                }
+            }
         }
         fetchData();
         fetchData2();
@@ -143,7 +188,7 @@ const Layout = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await axios.get("http://localhost:8080/mostRecentDeposit")
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}mostRecentDeposit`)
             if (response.data.length !== 0) {
                 setDeposit(response.data[0].amount);
             }
@@ -153,7 +198,7 @@ const Layout = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await axios.get("http://localhost:8080/mostRecentBuyPower")
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}mostRecentBuyPower`)
             if (response.data.length !== 0) {
                 setBuyPower(response.data[0].amount);
             }
@@ -162,33 +207,36 @@ const Layout = () => {
     }, [])
 
     useEffect(() => {
-        const socket = io.connect("http://localhost:8080");
-        socket.on("change-type", async (data) => {
-            const [key, value] = Object.entries(data)[0]
-            setCurrentPrice((currentPrice) => {
-                return { ...currentPrice, [key]: value }
-            })
-        })
-        const socket2 = new WebSocket('wss://ws.finnhub.io?token=c084c2748v6tohecnqi0');
+        // const socket = io.connect("http://localhost:8080");
+        // socket.on("change-type", async (data) => {
+        //     const [key, value] = Object.entries(data)[0]
+        //     setCurrentPrice((currentPrice) => {
+        //         return { ...currentPrice, [key]: value }
+        //     })
+        // })
+        const API_KEY = process.env.REACT_APP_API_KEY;
+        const socket2 = new WebSocket(`wss://ws.finnhub.io?token=${API_KEY}`);
 
         // Connection opened -> Subscribe
         socket2.addEventListener('open', function (event) {
-            const list = ["AAPL", "NIO"]
-            for(var i = 0; i < list.length; i++) {
+            const list = Object.keys(transaction)
+            for (var i = 0; i < list.length; i++) {
                 socket2.send(JSON.stringify({ 'type': 'subscribe', 'symbol': list[i] }))
             }
         });
 
         // Listen for messages
         socket2.addEventListener('message', function (event) {
-            setTest(test => {
-                const price = JSON.parse(event.data).data[0]["p"]
-                const name = JSON.parse(event.data).data[0]["s"]
-                // console.log(event.data)
-                return { ...test, [name]: price }
-            })
+            const data = JSON.parse(event.data).data
+            if (data !== undefined) {
+                setCurrentPrice(currentPrice => {
+                    const price = data[0]["p"].toString()
+                    const name = data[0]["s"]
+                    return { ...currentPrice, [name]: price }
+                })
+            }
         });
-    }, [])
+    }, [transaction])
 
     useEffect(() => {
         const sendDeposit = async () => {
@@ -196,7 +244,7 @@ const Layout = () => {
                 "amount": deposit,
                 "date": Date.now(),
             }
-            await axios.post("http://localhost:8080/deposit", data)
+            await axios.post(`${process.env.REACT_APP_BACKEND_URL}deposit`, data)
         }
         if (deposit === 0 && localStorage.getItem(deposit) === 0) {
             sendDeposit();
@@ -207,27 +255,38 @@ const Layout = () => {
         localStorage.setItem("deposit", deposit);
     }, [prevDeposit.current])
 
+    useEffect(() => {
+        const fetchData = async () => {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}allTradeHistory`);
+            if (Object.keys(response.data.data).length !== 0) {
+                setHistory(response.data.data);
+            }
+        }
+        fetchData();
+    }, [])
+
+    
     return (
         <React.Fragment>
-            <Grid container>
+            <Grid className={classes.container} alignItems="center" container>
                 <StockPriceContext.Provider value={{ currentPrice }}>
-                    <TransactionContext.Provider value={{ transaction, handleModifyingStock }}>
-                        <Grid className={classes.inputAndTable}>
-                            <Grid className={classes.stockDisplay} >
-                                <StockDisplay >
-                                </StockDisplay>
+                    <TransactionContext.Provider value={{ transaction, history, handleModifyingStock, handleModifyingHistory }}>
+                        <DepositContext.Provider value={{ deposit, buyPower, handleDepositChange, handleBuyAndSell, handleBuyPowerChange }}>
+                            <Grid className={classes.investing} alignItems="center" container>
+                                <Investing >
+                                </Investing>
                             </Grid>
-                            <DepositContext.Provider value={{ deposit, buyPower, handleDepositChange, handleBuyAndSell, handleBuyPowerChange }}>
-                                <Grid>
-                                    <div>
-                                        {test["AAPL"]}
+                            <Grid className={classes.chartGrid}>
+                                <Chart>
 
-                                    </div>
-                                    <div>
-                                        {test["NIO"]}
-                                    </div>
-                                    <Investing >
-                                    </Investing>
+                                </Chart>
+                            </Grid>
+                            <Grid className={classes.inputAndTable}>
+                                <Grid className={classes.stockDisplay} >
+                                    <StockDisplay >
+                                    </StockDisplay>
+                                </Grid>
+                                <Grid>
                                     <Typography variant="h4" align="left" color="primary">
                                         Buy Stock
                                     </Typography>
@@ -255,8 +314,8 @@ const Layout = () => {
                                         </div>
                                     </div>
                                 </Grid>
-                            </DepositContext.Provider>
-                        </Grid>
+                            </Grid>
+                        </DepositContext.Provider>
                     </TransactionContext.Provider>
                 </StockPriceContext.Provider>
             </Grid>

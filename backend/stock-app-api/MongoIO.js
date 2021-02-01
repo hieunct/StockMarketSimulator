@@ -93,6 +93,48 @@ const buyPower = (db, callback, data) => {
         callback();
     })
 }
+
+const tradeHistory = (db, callback, data) => {
+    db.collection("TradeHistory").insertOne(data, (err, res) => {
+        if (err) {
+            console.log(err)
+        }
+        callback();
+    })
+}
+
+const getAllTradeHistory = async (db, res) => {
+    const collection = db.collection("TradeHistory");
+    const uniqueArr = await collection.distinct("stock");
+    let data = {}
+    for (let i = 0; i < uniqueArr.length; i++) {
+        const list = await collection.find({ "stock": uniqueArr[i] }).toArray();
+        data = { ...data, [uniqueArr[i]]: list };
+    }
+    res.status(200)
+        .json({
+            data
+        });
+}
+
+const addInvesting = async (db, callback, data) => {
+    const collection = db.collection("Investing");
+    collection.insertOne(data, (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        callback();
+    })
+}
+
+const getAllInvesting = async (db, res) => {
+    const collection = db.collection("Investing");
+    const today = new Date().toLocaleDateString();
+    collection.find({ "date": today}).toArray((err, result) => {
+        res.status(200)
+            .json(result);
+    })
+}
 exports.insertTransaction = insertTransaction;
 exports.getAllTransactions = getAllTransactions;
 exports.updateExistedStock = updateExistedStock;
@@ -100,3 +142,7 @@ exports.insertStockPrice = insertStockPrice;
 exports.sellTransaction = sellTransaction;
 exports.depositMoney = depositMoney;
 exports.buyPower = buyPower;
+exports.tradeHistory = tradeHistory;
+exports.getAllTradeHistory = getAllTradeHistory;
+exports.addInvesting = addInvesting;
+exports.getAllInvesting = getAllInvesting;

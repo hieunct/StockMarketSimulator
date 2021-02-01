@@ -2,17 +2,22 @@ import { Typography } from '@material-ui/core';
 import React, { useContext, useEffect, useState } from 'react';
 import { TransactionContext, StockPriceContext, DepositContext } from './Layout'
 import { withStyles, makeStyles } from '@material-ui/core/styles';
+import Grid from '@material-ui/core/Grid';
+import Title from './Title';
 import axios from 'axios';
-import TablePaginationActions from '@material-ui/core/TablePagination/TablePaginationActions';
 const useStyles = makeStyles(theme => ({
-    numberDisplay: {
-        marginRight: theme.spacing(10)
-    },
     direction: {
         display: "flex",
         flexDirection: "row",
-        marginBottom: theme.spacing(5)
-    }
+        alignContent: "space-between",
+        '& > div:not(:first-child)': {
+            marginLeft: theme.spacing(8)
+        },
+        margin: theme.spacing(5)
+    },
+    depositContext: {
+        flex: 1,
+    },
 }));
 const Investing = (props) => {
     const transactions = useContext(TransactionContext).transaction;
@@ -41,72 +46,49 @@ const Investing = (props) => {
         }, 0)
     }
     const classes = useStyles();
-    
+
+    useEffect(() => {
+        const getRandomInt = (max) => {
+            return Math.floor(Math.random() * Math.floor(max));
+          }
+        const postData = async () => {
+            const day = new Date();
+            const data = {
+                "amount": getRandomInt(2000),
+                "date": day.toLocaleDateString(),
+                "time": day.toLocaleTimeString()
+            }
+            
+            await axios.post(`${process.env.REACT_APP_BACKEND_URL}addInvesting`, data)
+        }
+        setInterval(() => {
+            postData()
+        }, 1000000)
+    }, [])
+
     return (
         <React.Fragment>
-            <div className={classes.direction}>
-                <div className={classes.numberDisplay}>
-                    <Typography align="left" variant="h2" gutterBottom>
-                        Investing
+            <Grid className={classes.direction}>
+                <Grid>
+                    <Title>Investing</Title>
+                    <Typography component="p" variant="h4">
+                        ${(buyPower + totalStockInitial() + totalReturn()).toFixed(3)}
                     </Typography>
-                    <Typography align="left" variant="h2" gutterBottom>
-                        {buyPower + totalStockInitial() + totalReturn()}
+                </Grid>
+                <Grid>
+                    <Title>Profit</Title>
+                    <Typography component="p" variant="h4">
+                        ${(buyPower + totalStockInitial() + totalReturn() - deposit).toFixed(3)}
                     </Typography>
-                </div>
-                <div>
-                    <Typography align="left" variant="h2" gutterBottom>
-                        Buying Power
+                </Grid>
+                <Grid>
+                    <Title>Buying Power</Title>
+                    <Typography component="p" variant="h4">
+                        ${buyPower.toFixed(3)}
                     </Typography>
-                    <Typography align="left" variant="h2" gutterBottom>
-                        {buyPower}
-                    </Typography>
-                </div>
-            </div>
+                </Grid>
+            </Grid>
         </React.Fragment>
     )
 }
 export default Investing;
-// useEffect(() => {
-    //     const total = () => {
-    //         let sum = 0;
-    //         if (Object.keys(transactions).length !== 0 && Object.keys(updatedPrice).length !== 0) {
-    //             transactions.forEach((stock, i) => {
-    //                 sum += parseFloat(updatedPrice[stock["Stock Name"]].replace(',', '')) * parseFloat(stock["Shares"])
-    //             })
-    //             return sum.toFixed(3) + totalDeposit;
-    //         }
-    //         else {
-    //             return sum + totalDeposit;
-    //         }
-    //     }
-    //     setInvesting(total)
-    // }, [])
-    // const investing = () => {
-    //     let sum = 0;
-    //     if (Object.keys(transactions).length !== 0 && Object.keys(updatedPrice).length !== 0) {
-    //         transactions.forEach((stock, i) => {
-    //             sum += parseFloat(updatedPrice[stock["Stock Name"]].replace(',', '')) * parseFloat(stock["Shares"])
-    //             // console.log((updatedPrice[stock["Stock Name"]].replace(',', '')) * parseFloat(stock["Shares"]))
-    //         })
-    //         return sum.toFixed(3);
-    //     }
-    //     else {
-    //         return sum;
-    //     }
-    // }
-
-
-    // useEffect(() => {
-    //     setTotalDeposit(totalDeposit => {
-    //         const data = props.newDeposit;
-    //         return totalDeposit + parseFloat(data["amount"])
-    //     })
-    //     const data = {
-    //         "amount": totalDeposit,
-    //         "date": Date.now()
-    //     }
-    //     const sendData = async () => {
-    //         await axios.post('http://localhost:8080/deposit', data)
-    //     }
-    //     sendData()
-    // }, [props.newDeposit])

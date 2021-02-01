@@ -236,3 +236,53 @@ app.get('/mostRecentBuyPower', (req, res) => {
     })
 })
 
+app.post("/tradeHistory", (req, res) => {
+    const data = req.body;
+    MongoClient.connect(url, (err, client) => {
+        if (err) {
+            console.log(err);
+        }
+        const db = client.db("StockApp");
+        mongoIO.tradeHistory(db, () => {
+            res.status(200)
+                .json({
+                    data
+                })
+        }, data)
+    })
+})
+
+app.get("/allTradeHistory", (req, res) => {
+    MongoClient.connect(url, async (err, client) => {
+        if (err) {
+            console.log(err);
+        }
+        let data = {}
+        const db = client.db("StockApp");
+        mongoIO.getAllTradeHistory(db, res);
+    })
+})
+
+app.post("/addInvesting", (req, res) => {
+    MongoClient.connect(url, async (err, client) => {
+        if (err) {
+            console.log(err);
+        }
+        const db = client.db("StockApp");
+        const data = req.body;
+        mongoIO.addInvesting(db, () => {
+            res.status(200)
+                .json(data)
+        }, data);
+    })
+})
+
+app.get("/allInvesting", (req, res) => {
+    MongoClient.connect(url, async (err, client) => {
+        if (err) {
+            console.log(err);
+        }
+        const db = client.db("StockApp");
+        mongoIO.getAllInvesting(db, res);
+    })
+})

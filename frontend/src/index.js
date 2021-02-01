@@ -1,11 +1,8 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { Provider } from 'react-redux'
-import { createStore } from 'redux';
-import axios from 'axios';
 
 ReactDOM.render(
   <React.StrictMode>
