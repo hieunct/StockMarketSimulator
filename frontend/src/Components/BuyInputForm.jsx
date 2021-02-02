@@ -37,7 +37,6 @@ const BuyInputForm = (props) => {
         e.preventDefault()
         e.stopPropagation()
         const API_KEY = process.env.REACT_APP_API_KEY;
-        console.log(API_KEY)
         const response = await axios.get(`https://finnhub.io/api/v1/quote?symbol=${stockName.toUpperCase()}&token=${API_KEY}`);
         const cPrice = (response.data)["c"].toString();
         if (parseFloat(shares) * parseFloat(cPrice) > buyPower) {

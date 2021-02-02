@@ -129,8 +129,9 @@ const addInvesting = async (db, callback, data) => {
 
 const getAllInvesting = async (db, res) => {
     const collection = db.collection("Investing");
-    const today = new Date().toLocaleDateString();
-    collection.find({ "date": today}).toArray((err, result) => {
+    const day = new Date();
+    const [today, time] = day.toLocaleString('en-US', { timeZone: 'America/New_York' }).split(', ')
+    collection.find({"date": today}).toArray((err, result) => {
         res.status(200)
             .json(result);
     })

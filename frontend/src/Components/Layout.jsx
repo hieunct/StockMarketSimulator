@@ -146,6 +146,11 @@ const Layout = () => {
             return history;
         })
     }
+
+    const [chartData, setChartData] = useState({});
+    const handleModifyingChartData = async (data) => {
+        setChartData(data);
+    }
     useEffect(() => {
         const fetchData = async () => {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}allTransactions`)
@@ -167,7 +172,6 @@ const Layout = () => {
             console.log(backend)
             
             if (day.getDay() !== 0 && day.getDay() !== 6 && !day.getHours() <= 3 && !day.getHours >= 21) {
-                console.log(new Date().getHours());
                 setCurrentPrice(backend.data);
             }
             else {
@@ -273,11 +277,11 @@ const Layout = () => {
                     <TransactionContext.Provider value={{ transaction, history, handleModifyingStock, handleModifyingHistory }}>
                         <DepositContext.Provider value={{ deposit, buyPower, handleDepositChange, handleBuyAndSell, handleBuyPowerChange }}>
                             <Grid className={classes.investing} alignItems="center" container>
-                                <Investing >
+                                <Investing modifyChartData={handleModifyingChartData}>
                                 </Investing>
                             </Grid>
                             <Grid className={classes.chartGrid}>
-                                <Chart>
+                                <Chart chartData = {chartData}>
 
                                 </Chart>
                             </Grid>

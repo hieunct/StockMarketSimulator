@@ -47,23 +47,30 @@ const Investing = (props) => {
     }
     const classes = useStyles();
 
+    const getRandomInt = (max) => {
+        return Math.floor(Math.random() * Math.floor(max));
+    }
     useEffect(() => {
-        const getRandomInt = (max) => {
-            return Math.floor(Math.random() * Math.floor(max));
-          }
+        localStorage.setItem("investing", (buyPower + totalStockInitial() + totalReturn()).toFixed(3))
+    }, [updatedPrice])
+
+    useEffect(() => {
         const postData = async () => {
             const day = new Date();
+            const [date, time] = day.toLocaleString('en-US', { timeZone: 'America/New_York' }).split(', ')
             const data = {
-                "amount": getRandomInt(2000),
-                "date": day.toLocaleDateString(),
-                "time": day.toLocaleTimeString()
+                "amount": localStorage.getItem("investing"),
+                "date": date,
+                "time": time
             }
-            
+            props.modifyChartData(data)
             await axios.post(`${process.env.REACT_APP_BACKEND_URL}addInvesting`, data)
         }
-        setInterval(() => {
+
+        const interval = setInterval(() => {
             postData()
-        }, 1000000)
+        }, 60000)
+        return () => clearInterval(interval);
     }, [])
 
     return (

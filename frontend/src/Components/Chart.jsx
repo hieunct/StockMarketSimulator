@@ -3,15 +3,18 @@ import { useTheme } from '@material-ui/core/styles';
 import { LineChart, Line, XAxis, YAxis, Label, ResponsiveContainer, Tooltip } from 'recharts';
 import Title from './Title';
 import axios from 'axios';
+import { create } from 'lodash';
 
 // Generate Sales Data
 function createData(time, amount) {
   return { time, amount };
 }
 
-export default function Chart() {
+export default function Chart(props) {
   const theme = useTheme();
   const [chartData, setChartData] = useState([]);
+
+
   useEffect(() => {
     const data = async () => {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}allInvesting`);
@@ -25,21 +28,34 @@ export default function Chart() {
     data();
   }, [])
 
+  useEffect(() => {
+    
+    if (props.chartData !== undefined) {
+      
+      setChartData(chartData => {
+        const receive = props.chartData;
+        const data = createData(receive["time"], receive["amount"]);
+        chartData.push(data);
+        return chartData
+      })
+      console.log(chartData.length);
+    }
+  }, [props.chartData])
   return (
     <React.Fragment>
       <Title align="center">Today</Title>
       <ResponsiveContainer >
         <LineChart
-          data={chartData}
+          data={chartData.slice()}
           margin={{
             top: 16,
-            right: 16,
+            right: 0,
             bottom: 0,
-            left: 24,
+            left: 0,
           }}
         >
           <XAxis padding={{ left: 0 }} dataKey="time" stroke={theme.palette.text.secondary} />
-          <YAxis stroke={theme.palette.text.secondary} >
+          <YAxis padding={{ left: 0 }} hide={true} stroke={theme.palette.text.secondary} domain={['dataMin', 'dataMax']}>
             <Label
               angle={270}
               position="left"
