@@ -55,8 +55,8 @@ const Investing = (props) => {
     }, [updatedPrice])
 
     useEffect(() => {
+        const day = new Date();
         const postData = async () => {
-            const day = new Date();
             const [date, time] = day.toLocaleString('en-US', { timeZone: 'America/New_York' }).split(', ')
             const data = {
                 "amount": localStorage.getItem("investing"),
@@ -66,11 +66,15 @@ const Investing = (props) => {
             props.modifyChartData(data)
             await axios.post(`${process.env.REACT_APP_BACKEND_URL}addInvesting`, data)
         }
+        
+        if (day.getDay() !== 0 && day.getDay() !== 6 && day.getHours() <= 3 && day.getHours >= 21) {
+            console.log(day.getHours())
+            const interval = setInterval(() => {
+                postData()
+            }, 60000)
+            return () => clearInterval(interval);
+        }
 
-        const interval = setInterval(() => {
-            postData()
-        }, 60000)
-        return () => clearInterval(interval);
     }, [])
 
     return (
