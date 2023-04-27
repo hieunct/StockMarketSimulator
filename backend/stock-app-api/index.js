@@ -4,11 +4,11 @@ const bodyParser = require('body-parser');
 const app = express();
 const MongoClient = require('mongodb').MongoClient;
 const mongoIO = require('./MongoIO');
-const url = "mongodb://localhost:27017"
+const url = "mongodb://127.0.0.1:27017/Random"
 const mongoose = require('mongoose');
 const Transaction = require('./Schema/Transaction')
 const cors = require('cors');
-mongoose.connect('mongodb://localhost:27017/StockApp', { useNewUrlParser: true, useUnifiedTopology: true });
+// mongoose.connect('mongodb://localhost:27017/', { useNewUrlParser: true, useUnifiedTopology: true });
 app.use(bodyParser.json());
 app.use(cors())
 const server = app.listen(port, () => {
@@ -25,7 +25,10 @@ app.get('/', (req, res) => {
     res.send("Hello World!")
 })
 
+// console.log(MongoClient)
 MongoClient.connect(url, async (err, client) => {
+    // console.log(client)
+    console.log(err)
     const db = client.db('StockApp').collection("StockPrice");
     const changeStream = await db.watch()
     changeStream.on('change', (change) => {
@@ -40,6 +43,7 @@ MongoClient.connect(url, async (err, client) => {
         }
     })
 })
+
 app.post('/searchTransaction', (req, res) => {
     MongoClient.connect(url, (err, client) => {
         if (err) {

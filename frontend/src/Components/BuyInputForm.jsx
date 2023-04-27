@@ -33,6 +33,7 @@ const BuyInputForm = (props) => {
     const buyPower = useContext(DepositContext).buyPower;
     const newBuyPower = useContext(DepositContext).handleBuyAndSell;
     const updatedPrice = useContext(StockPriceContext).currentPrice;
+
     const handleSubmit = async e => {
         e.preventDefault()
         e.stopPropagation()
