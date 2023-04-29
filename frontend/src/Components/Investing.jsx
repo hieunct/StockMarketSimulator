@@ -81,25 +81,35 @@ const Investing = (props) => {
 
     }, [])
 
+    const returnRate = ((buyPower + totalStockInitial() + totalReturn() - deposit) / deposit * 100).toFixed(3)
+    const investing = (buyPower + totalStockInitial() + totalReturn()).toFixed(3)
+    const profit = (buyPower + totalStockInitial() + totalReturn() - deposit).toFixed(3)
+
     return (
         <React.Fragment>
             <Grid className={classes.direction}>
                 <Grid>
                     <Title>Investing</Title>
                     <Typography component="p" variant="h4">
-                        ${(buyPower + totalStockInitial() + totalReturn()).toFixed(3)}
+                        ${investing}
                     </Typography>
                 </Grid>
                 <Grid>
                     <Title>Profit</Title>
                     <Typography component="p" variant="h4">
-                        ${(buyPower + totalStockInitial() + totalReturn() - deposit).toFixed(3)}
+                        ${profit}
                     </Typography>
                 </Grid>
                 <Grid>
                     <Title>Buying Power</Title>
                     <Typography component="p" variant="h4">
                         ${buyPower.toFixed(3)}
+                    </Typography>
+                </Grid>
+                <Grid>
+                    <Title>Return %</Title>
+                    <Typography component="p" variant="h4" style={{ color: (returnRate < 0) ? 'red' : 'green' }}>
+                        {returnRate}%
                     </Typography>
                 </Grid>
             </Grid>
