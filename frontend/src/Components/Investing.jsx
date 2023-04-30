@@ -47,9 +47,6 @@ const Investing = (props) => {
     }
     const classes = useStyles();
 
-    const getRandomInt = (max) => {
-        return Math.floor(Math.random() * Math.floor(max));
-    }
     useEffect(() => {
         localStorage.setItem("investing", (buyPower + totalStockInitial() + totalReturn()).toFixed(3))
     }, [updatedPrice])
@@ -82,8 +79,9 @@ const Investing = (props) => {
     }, [])
 
     const returnRate = ((buyPower + totalStockInitial() + totalReturn() - deposit) / deposit * 100).toFixed(3)
+    console.log(returnRate)
     const investing = (buyPower + totalStockInitial() + totalReturn()).toFixed(3)
-    const profit = (buyPower + totalStockInitial() + totalReturn() - deposit).toFixed(3)
+    const profit = (buyPower + totalStockInitial() + totalReturn() - deposit).toFixed(3) 
 
     return (
         <React.Fragment>
@@ -109,7 +107,7 @@ const Investing = (props) => {
                 <Grid>
                     <Title>Return %</Title>
                     <Typography component="p" variant="h4" style={{ color: (returnRate < 0) ? 'red' : 'green' }}>
-                        {returnRate}%
+                        {returnRate === 'NaN' ? 0 : returnRate}%
                     </Typography>
                 </Grid>
             </Grid>

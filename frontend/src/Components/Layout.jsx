@@ -12,6 +12,8 @@ import { Typography } from '@material-ui/core';
 import { Paper } from '@material-ui/core';
 import Investing from './Investing';
 import Chart from './Chart';
+import ResetButton from './ResetButton';
+
 const useStyles = makeStyles(theme => ({
     container: {
         display: "flex"
@@ -151,6 +153,12 @@ const Layout = () => {
     const handleModifyingChartData = async (data) => {
         setChartData(data);
     }
+
+    const handleResetPage = async () => {
+        await axios.delete(`${process.env.REACT_APP_BACKEND_URL}reset`)
+        window.location.reload()
+    }
+
     useEffect(() => {
         const fetchData = async () => {
             const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}allTransactions`)
@@ -273,7 +281,7 @@ const Layout = () => {
     return (
         <React.Fragment>
             <Grid className={classes.container} alignItems="center" container>
-                <StockPriceContext.Provider value={{ currentPrice }}>
+                <StockPriceContext.Provider value={{ currentPrice, handleResetPage }}>
                     <TransactionContext.Provider value={{ transaction, history, handleModifyingStock, handleModifyingHistory }}>
                         <DepositContext.Provider value={{ deposit, buyPower, handleDepositChange, handleBuyAndSell, handleBuyPowerChange }}>
                             <Grid className={classes.investing} alignItems="center" container>
@@ -317,6 +325,10 @@ const Layout = () => {
                                             </WithdrawalForm>
                                         </div>
                                     </div>
+                                    <Typography variant="h4" align="left" color="primary">
+                                        Reset Portfolio
+                                    </Typography>
+                                    <ResetButton></ResetButton>
                                 </Grid>
                             </Grid>
                         </DepositContext.Provider>

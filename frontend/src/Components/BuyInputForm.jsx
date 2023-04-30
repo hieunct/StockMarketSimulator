@@ -24,6 +24,7 @@ const BuyInputForm = (props) => {
     const [stockName, setStockName] = useState('');
     const [shares, setShares] = useState('');
     const [price, setPrice] = useState('');
+    const [invalidQuantity, setInvalidQuantity] = useState(false);
     const [enoughMoney, setEnoughMoney] = useState(true)
     const modify = useContext(TransactionContext).handleModifyingStock;
     const newHistory = useContext(TransactionContext).handleModifyingHistory;
@@ -43,7 +44,8 @@ const BuyInputForm = (props) => {
         if (parseFloat(shares) * parseFloat(cPrice) > buyPower) {
             setEnoughMoney(false);
         }
-        else {
+        
+        else if (enoughMoney && !invalidQuantity) {
             const data = {
                 "Stock Name": stockName.toUpperCase(),
                 "Shares": shares,
@@ -85,6 +87,16 @@ const BuyInputForm = (props) => {
             setEnoughMoney(true);
         }
     }, [shares])
+
+    useEffect(() => {
+        if (parseFloat(shares) < 0) {
+            setInvalidQuantity(true);
+        }
+        else {
+            setInvalidQuantity(false);
+        }
+    }, [shares])
+
     return (
         <React.Fragment>
             <form className={classes.root} noValidate autoComplete="off" onSubmit={handleSubmit}>
@@ -94,13 +106,14 @@ const BuyInputForm = (props) => {
                 </FormControl>
                 <FormControl>
                     <InputLabel> Shares</InputLabel>
-                    <Input id="outlined-basic" onChange={handleSharesChange} value={shares} />
+                    <Input type="number" id="outlined-basic" onChange={handleSharesChange} value={shares} />
                 </FormControl>
                 <Button type='submit' variant="contained" color="primary" error={!enoughMoney}>
                     Submit
                 </Button>
             </form>
-            {!enoughMoney && <Alert severity="error">Buying Power is not enough</Alert>}
+            {!enoughMoney && <Alert severity="error">Buying Power is not enough. Please deposit more below</Alert>}
+            {invalidQuantity && <Alert severity="error">Input quantity is invalid</Alert>}
         </React.Fragment>
 
     );
