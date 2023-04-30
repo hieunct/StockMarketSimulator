@@ -49,7 +49,7 @@ const Investing = (props) => {
 
     useEffect(() => {
         localStorage.setItem("investing", (buyPower + totalStockInitial() + totalReturn()).toFixed(3))
-    }, [updatedPrice])
+    }, [updatedPrice, transactions, buyPower, deposit])
 
     useEffect(() => {
         
@@ -65,8 +65,7 @@ const Investing = (props) => {
             props.modifyChartData(data)
             await axios.post(`${process.env.REACT_APP_BACKEND_URL}addInvesting`, data)
         }
-        // console.log(`Day ${day.getDay()}`)
-        // console.log(`Hour ${day.getHours()}`)
+        
         const outerDay = new Date();
         if (outerDay.getDay() !== 0 && outerDay.getDay() !== 6 && outerDay.getHours() <= 17) {
             // console.log(day.getHours())
@@ -79,7 +78,6 @@ const Investing = (props) => {
     }, [])
 
     const returnRate = ((buyPower + totalStockInitial() + totalReturn() - deposit) / deposit * 100).toFixed(3)
-    console.log(returnRate)
     const investing = (buyPower + totalStockInitial() + totalReturn()).toFixed(3)
     const profit = (buyPower + totalStockInitial() + totalReturn() - deposit).toFixed(3) 
 

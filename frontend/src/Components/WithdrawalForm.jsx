@@ -45,6 +45,7 @@ const WithdrawalForm = (props) => {
 
     useEffect(() => {
         const currentInvest = localStorage.getItem('investing');
+        console.log("currentInvest " + currentInvest)
         if (deposit < 0) {
             setInvalidQuantity(true);
         }
