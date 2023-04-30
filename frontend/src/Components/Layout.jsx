@@ -78,6 +78,8 @@ const Layout = () => {
     const [deposit, setDeposit] = useState(0);
     const [buyPower, setBuyPower] = useState(0);
     const [history, setHistory] = useState({});
+    // const [isLoading, setIsLoading] = useState(false);
+
     const prevDeposit = useRef();
     function createTransaction(shares, price, total, current) {
         return { shares, price, total, current };
@@ -177,7 +179,6 @@ const Layout = () => {
         const fetchData2 = async () => {
             let day = new Date();
             const backend = await axios.get(`${process.env.REACT_APP_BACKEND_URL}allStockPrice`)
-            console.log(backend)
             
             if (day.getDay() !== 0 && day.getDay() !== 6 && !day.getHours() <= 3 && !day.getHours >= 21) {
                 setCurrentPrice(backend.data);

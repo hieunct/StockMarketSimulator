@@ -68,7 +68,6 @@ const Investing = (props) => {
         
         const outerDay = new Date();
         if (outerDay.getDay() !== 0 && outerDay.getDay() !== 6 && outerDay.getHours() <= 17) {
-            // console.log(day.getHours())
             const interval = setInterval(() => {
                 postData()
             }, 60000)
@@ -87,25 +86,25 @@ const Investing = (props) => {
                 <Grid>
                     <Title>Investing</Title>
                     <Typography component="p" variant="h4">
-                        ${investing}
+                        ${Number(investing).toLocaleString()}
                     </Typography>
                 </Grid>
                 <Grid>
                     <Title>Profit</Title>
                     <Typography component="p" variant="h4">
-                        ${profit}
+                        ${Number(profit).toLocaleString()}
                     </Typography>
                 </Grid>
                 <Grid>
                     <Title>Buying Power</Title>
                     <Typography component="p" variant="h4">
-                        ${buyPower.toFixed(3)}
+                        ${Number(buyPower.toFixed(3)).toLocaleString()}
                     </Typography>
                 </Grid>
                 <Grid>
                     <Title>Return %</Title>
                     <Typography component="p" variant="h4" style={{ color: (returnRate < 0) ? 'red' : 'green' }}>
-                        {returnRate === 'NaN' ? 0 : returnRate}%
+                        {returnRate === 'NaN' ? 0 : Number(returnRate).toLocaleString()}%
                     </Typography>
                 </Grid>
             </Grid>

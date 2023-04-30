@@ -26,6 +26,7 @@ const BuyInputForm = (props) => {
     const [price, setPrice] = useState('');
     const [invalidQuantity, setInvalidQuantity] = useState(false);
     const [enoughMoney, setEnoughMoney] = useState(true)
+    const [stockNotAvailable, setStockNotAvailable] = useState(false);
     const modify = useContext(TransactionContext).handleModifyingStock;
     const newHistory = useContext(TransactionContext).handleModifyingHistory;
     const handleStockNameChange = e => setStockName(e.target.value);
@@ -41,10 +42,14 @@ const BuyInputForm = (props) => {
         const API_KEY = process.env.REACT_APP_API_KEY;
         const response = await axios.get(`https://finnhub.io/api/v1/quote?symbol=${stockName.toUpperCase()}&token=${API_KEY}`);
         const cPrice = (response.data)["c"].toString();
+        const dPrice = (response.data)["d"];
+
         if (parseFloat(shares) * parseFloat(cPrice) > buyPower) {
             setEnoughMoney(false);
         }
-        
+        else if (dPrice === null) {
+            setStockNotAvailable(true);
+        }
         else if (enoughMoney && !invalidQuantity) {
             const data = {
                 "Stock Name": stockName.toUpperCase(),
@@ -65,7 +70,6 @@ const BuyInputForm = (props) => {
                     setStockName('');
                     setPrice('');
                     setShares('');
-                    console.log(res.data.data)
                     res.data.data["Price"] = parseFloat(res.data.data["Price"]).toFixed(3).toString();
                     res.data.data["Shares"] = parseFloat(res.data.data["Shares"]).toFixed(3).toString();
                     modify(res.data.data, true)
@@ -77,8 +81,13 @@ const BuyInputForm = (props) => {
                 "amount": parseFloat(buyPower) - (parseFloat(shares) * parseFloat(cPrice)),
                 "date": Date.now()
             });
+            setEnoughMoney(true);
+            setInvalidQuantity(false);
+            setStockNotAvailable(false);
         }
+        
     }
+
     useEffect(() => {
         if (parseFloat(shares) * parseFloat(updatedPrice[stockName]) > buyPower) {
             setEnoughMoney(false);
@@ -114,6 +123,7 @@ const BuyInputForm = (props) => {
             </form>
             {!enoughMoney && <Alert severity="error">Buying Power is not enough. Please deposit more below</Alert>}
             {invalidQuantity && <Alert severity="error">Input quantity is invalid</Alert>}
+            {stockNotAvailable && <Alert severity="error">Stock Not Available</Alert>}
         </React.Fragment>
 
     );

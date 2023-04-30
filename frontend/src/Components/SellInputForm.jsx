@@ -26,6 +26,7 @@ const SellInputForm = (props) => {
     const [price, setPrice] = useState('');
     const [invalidQuantity, setInvalidQuantity] = useState(false);
     const [enoughShares, setEnoughShares] = useState(true);
+    const [stockNotAvailable, setStockNotAvailable] = useState(false);
 
     const handleStockNameChange = e => setStockName(e.target.value);
     const handleSharesChange = e => setShares(e.target.value);
@@ -41,7 +42,7 @@ const SellInputForm = (props) => {
     const handleSubmit = async e => {
         e.preventDefault()
         e.stopPropagation()
-        if (!invalidQuantity) {
+        if (!invalidQuantity && enoughShares && !stockNotAvailable) {
             const data = {
                 "Stock Name": stockName,
                 "Shares": shares,
@@ -88,6 +89,15 @@ const SellInputForm = (props) => {
         }
     }, [shares])
 
+    useEffect(() => {
+        const allStocks = Object.keys(globalTransaction);
+        if(stockName !== '' && !allStocks.includes(stockName.toUpperCase())) {
+            setStockNotAvailable(true);
+        } else {
+            setStockNotAvailable(false);
+        }
+    }, [stockName])
+
     return (
         <form className={classes.root} noValidate autoComplete="off" onSubmit={handleSubmit}>
             <FormControl>
@@ -102,7 +112,8 @@ const SellInputForm = (props) => {
                 Submit
             </Button>
             {invalidQuantity && <Alert severity="error">Input quantity is invalid</Alert>}
-            {!enoughShares && <Alert severity="error">You do not have enough shares</Alert>}
+            {!enoughShares && <Alert severity="error">You don't have enough shares</Alert>}
+            {stockNotAvailable && <Alert severity="error">You don't own this stock</Alert>}
         </form>
     );
 }

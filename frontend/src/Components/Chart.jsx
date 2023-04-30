@@ -38,7 +38,6 @@ export default function Chart(props) {
         chartData.push(data);
         return chartData
       })
-      console.log(chartData.length);
     }
   }, [props.chartData])
   return (
